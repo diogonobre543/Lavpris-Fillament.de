@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produkter | Billigt Filament</title>
+    <link rel="stylesheet" href="Assets/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-grid">
+            <a href="index.html" class="logo">BILLIGT<span>FILAMENT</span></a>
+            
+            <button class="hamburger" id="hamburger" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+            <nav class="main-nav" id="main-nav">
+                <a href="index.html">Forside</a>
+                <a href="products.html" class="active">Produkter</a>
+                <a href="about.html">Om os</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 60px 0;">
+        <h1 style="font-size: 2.8rem; margin-bottom: 40px; letter-spacing: -2px;">Vores Sortiment</h1>
+
+        <div class="filters-wrapper">
+            <div class="filter-row">
+                <div class="filter-group"> <label class="filter-label">Søg i kataloget</label>
+                    <input type="text" id="searchField" class="search-input" placeholder="Søg her...">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Sortér efter</label>
+                    <select id="sortOrder" class="sort-select">
+                        <option value="default">Mest relevante</option>
+                        <option value="low">Pris: Lav til Høj</option>
+                        <option value="high">Pris: Høj til Lav</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="material-selection">
+                <label class="filter-label">Vælg Kategori / Materiale</label>
+                <div class="material-boxes" id="materialBoxes">
+                    <button class="material-btn active" data-cat="all">Alle</button>
+                    <button class="material-btn" data-cat="PRINTER">3D Printere</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="productGrid" class="product-grid"></div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2026 Billigt Filament ApS. Kvalitetsmaterialer til 3D print.</p>
+        </div>
+    </footer>
+    
+    <script src="Assets/script.js"></script>
+</body>
+</html>
