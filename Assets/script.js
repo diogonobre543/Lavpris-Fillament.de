@@ -1,7 +1,7 @@
 /**
  * BILLIGT FILAMENT - MOTOR JAVASCRIPT 2026
  * Edição: Schilderproduktion (Produção de Placas)
- * FOCO: Correção total da atribuição de preços da API
+ * FOCO: Correção do nome do botão para o idioma do código (Alemão) e uso de Saleprice
  */
 
 const API_URL = 'https://www.datamarked.dk/?id=8016&apikey=F47E351103F8082D62BE5163CC64B47D6CD7243E2531EB1C02F5D00C67D6EA5D';
@@ -14,14 +14,14 @@ const materialKeywords = ['PLA', 'PETG', 'SILK', 'ABS', 'TPU', 'ASA', 'NYLON', '
 const printerKeywords = ['PRINTER', 'CREALITY', 'BAMBU', 'ANYCUBIC', 'ENDER', 'VORON', 'ELEGOO', 'MACHINE', 'RESIN'];
 
 /**
- * FORMATAÇÃO DE PREÇO PARA EXIBIÇÃO
- * Removemos qualquer menção a "kr" e focamos no valor numérico.
+ * FORMATAÇÃO DE PREÇO
+ * Mantendo o padrão de moeda do site (kr.) com pontuação alemã.
  */
 const formatPrice = (p) => {
     return new Intl.NumberFormat('de-DE', { 
         minimumFractionDigits: 2, 
         maximumFractionDigits: 2 
-    }).format(p);
+    }).format(p) + ' kr.';
 };
 
 /**
@@ -40,7 +40,7 @@ function initNavigation() {
 }
 
 /**
- * 2. CARREGAR PRODUTOS (LÓGICA DE PREÇO CORRIGIDA)
+ * 2. CARREGAR PRODUTOS (LÓGICA SALEPRICE)
  */
 async function loadProducts() {
     try {
@@ -48,7 +48,7 @@ async function loadProducts() {
         const data = await response.json();
 
         allProducts = data.map(i => {
-            const titleUpper = i.title.toUpperCase();
+            const titleUpper = (i.title || "").toUpperCase();
             let cat = 'ANDERE';
             
             if (printerKeywords.some(k => titleUpper.includes(k))) {
@@ -58,27 +58,19 @@ async function loadProducts() {
                 cat = found || 'ANDERE';
             }
 
-            // --- EXTRAÇÃO DE PREÇO REAL ---
-            // Função interna para limpar "76 EUR" ou "125,00 kr" e virar número
+            // Função para limpar e converter preços da API
             const cleanPrice = (val) => {
                 if (!val) return 0;
-                // Remove tudo o que não é número, ponto ou vírgula
                 let s = String(val).replace(/[^\d.,]/g, '');
-                // Se tiver os dois (milhar e decimal), limpa o ponto de milhar
                 if (s.includes('.') && s.includes(',')) s = s.replace(/\./g, '');
-                // Troca vírgula por ponto para o parseFloat do JavaScript
                 return parseFloat(s.replace(',', '.')) || 0;
             };
 
             const pNormal = cleanPrice(i.price);
-            const pSale = cleanPrice(i.sale_price);
+            const pSale = cleanPrice(i.saleprice);
 
-            // Se o sale_price for maior que zero e menor que o price, usamos o sale_price.
-            // Caso contrário, usamos o price normal.
-            let finalPrice = (pSale > 0 && pSale < pNormal) ? pSale : pNormal;
-            
-            // Fallback: se um for zero, usa o outro
-            if (finalPrice === 0) finalPrice = pNormal || pSale;
+            // Prioridade ao saleprice se existir e for maior que zero
+            let finalPrice = (pSale > 0) ? pSale : pNormal;
 
             return {
                 title: i.title,
@@ -97,7 +89,7 @@ async function loadProducts() {
         createFilterButtons();
 
     } catch (error) {
-        console.error("Erro ao carregar produtos:", error);
+        console.error("Fehler beim Laden der Produkte:", error);
     }
 }
 
@@ -128,7 +120,7 @@ function renderGrid() {
                 <div class="price">${formatPrice(p.price)}</div>
                 <div class="product-actions">
                     <a href="./product-detail.html?title=${encodeURIComponent(p.title)}" class="btn-details">Mehr erfahren</a>
-                    <a href="${p.link}" target="_blank" class="btn-buy">Schildproduktion</a>
+                    <a href="${p.link}" target="_blank" class="btn-buy">JETZT KAUFEN</a>
                 </div>
             </div>
         </article>
@@ -150,7 +142,7 @@ function renderProductDetail() {
         container.innerHTML = `
             <div class="detail-image-box"><img src="${product.img}"></div>
             <div class="detail-content">
-                <span class="stock-tag" style="color: ${product.stock > 0 ? '#10b981' : '#ef4444'}">
+                <span class="stock-tag" style="color: ${product.stock > 0 ? '#10b981' : '#ef4444'}; font-weight: bold;">
                     ${product.stock > 0 ? '● AUF LAGER' : '○ AUSVERKAUFT'}
                 </span>
                 <h1>${product.title}</h1>
@@ -172,10 +164,18 @@ function createFilterButtons() {
     const box = document.getElementById('materialBoxes');
     if (!box) return;
     const cats = ['all', 'PRINTER', ...new Set(allProducts.map(p => p.category).filter(c => c !== 'PRINTER' && c !== 'ANDERE'))].sort();
-    box.innerHTML = cats.map(c => `<button class="material-btn ${c === activeCategory ? 'active' : ''}" onclick="changeCategory('${c}')">${c === 'all' ? 'Alle' : c}</button>`).join('');
+    box.innerHTML = cats.map(c => `
+        <button class="material-btn ${c === activeCategory ? 'active' : ''}" onclick="changeCategory('${c}')">
+            ${c === 'all' ? 'Alle' : c}
+        </button>
+    `).join('');
 }
 
-window.changeCategory = (cat) => { activeCategory = cat; renderGrid(); createFilterButtons(); };
+window.changeCategory = (cat) => { 
+    activeCategory = cat; 
+    renderGrid(); 
+    createFilterButtons(); 
+};
 
 function renderHero() {
     const pBox = document.getElementById('hero-random-printer');
@@ -185,7 +185,14 @@ function renderHero() {
     const printers = allProducts.filter(p => p.category === 'PRINTER');
     const mats = allProducts.filter(p => p.category !== 'PRINTER' && p.category !== 'ANDERE');
 
-    const card = (item) => `<div class="product-card" style="width:220px;"><img src="${item.img}" style="width:100%"><h4>${item.title}</h4><div class="price">${formatPrice(item.price)}</div></div>`;
+    const card = (item) => `
+        <div class="product-card" style="width:220px;">
+            <img src="${item.img}" style="width:100%">
+            <h4>${item.title}</h4>
+            <div class="price">${formatPrice(item.price)}</div>
+            <a href="./product-detail.html?title=${encodeURIComponent(item.title)}" class="btn-details" style="display:block; margin-top:10px; font-size:0.8rem;">Mehr erfahren</a>
+        </div>`;
+    
     if (printers.length) pBox.innerHTML = card(printers[Math.floor(Math.random() * printers.length)]);
     if (mats.length) mBox.innerHTML = card(mats[Math.floor(Math.random() * mats.length)]);
 }
